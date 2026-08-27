@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ALMATECH • Gestão de Almoxarifado</title>
+<link rel="stylesheet" href="estilo.css">
+
+</head>
+
+<body>
+
+<!-- LOGIN -->
+
+<section id="loginScreen">
+
+    <div class="login-box">
+
+        <div class="logo">
+            <div class="logo-icon">A</div>
+            <div>
+                <h1>ALMATECH</h1>
+                <small>SMART WAREHOUSE ERP</small>
+            </div>
+        </div>
+
+        <h2>Acesso ao sistema</h2>
+        <p>Gestão inteligente de almoxarifado</p>
+
+        <div class="field">
+            <label>Usuário</label>
+            <input id="loginUser" autocomplete="username" placeholder="Digite seu usuário">
+        </div>
+
+        <div class="field">
+            <label>Senha</label>
+            <input id="loginPass" type="password" autocomplete="current-password" placeholder="Digite sua senha">
+        </div>
+
+        <button class="btn btn-primary" style="width:100%;padding:14px" onclick="login()">
+            ENTRAR NO SISTEMA
+        </button>
+
+        <div class="login-demo">
+            <strong>Acessos de demonstração</strong><br>
+            Administrador: <b>admin</b> / <b>admin123</b><br>
+            Usuário autorizado: <b>almox</b> / <b>123456</b>
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- APPLICATION -->
+
+<section id="app" class="hidden">
+
+    <aside class="sidebar">
+
+        <div class="sidebar-logo">
+            <div class="logo-icon">A</div>
+            <div>
+                <strong>ALMATECH</strong>
+                <span>WAREHOUSE ERP</span>
+            </div>
+        </div>
+
+        <div class="nav-title">OPERAÇÃO</div>
+
+        <button class="nav-btn active" data-page="dashboard" onclick="showPage('dashboard',this)">
+            ◈ <span>Dashboard</span>
+        </button>
+
+        <button class="nav-btn" data-page="materials" onclick="showPage('materials',this)">
+            ▣ <span>Materiais</span>
+        </button>
+
+        <button class="nav-btn" data-page="movement" onclick="showPage('movement',this)">
+            ⇄ <span>Entrada / Saída</span>
+        </button>
+
+        <button class="nav-btn" data-page="history" onclick="showPage('history',this)">
+            ◷ <span>Histórico</span>
+        </button>
+
+        <div class="nav-title">ADMINISTRAÇÃO</div>
+
+        <button class="nav-btn admin-only" data-page="users" onclick="showPage('users',this)">
+            ◎ <span>Usuários</span>
+        </button>
+
+        <button class="nav-btn admin-only" data-page="settings" onclick="showPage('settings',this)">
+            ⚙ <span>Configurações</span>
+        </button>
+
+        <div class="sidebar-bottom">
+
+            <div class="user-mini">
+                <div class="avatar" id="userAvatar">A</div>
+                <div>
+                    <strong id="sideUser">Administrador</strong>
+                    <span id="sideRole">ADMIN</span>
+                </div>
+            </div>
+
+            <button class="nav-btn" onclick="logout()">
+                ⎋ <span>Sair</span>
+            </button>
+
+        </div>
+
+    </aside>
+
+
+    <main class="main">
+
+        <header class="topbar">
+
+            <div class="topbar-title">
+                <h2 id="pageTitle">Dashboard</h2>
+                <span id="currentDate"></span>
+            </div>
+
+            <div class="topbar-right">
+                <div class="status">
+                    <span class="status-dot"></span>
+                    SISTEMA ONLINE
+                </div>
+            </div>
+
+        </header>
+
+
+        <div class="content">
+
+            <!-- DASHBOARD -->
+
+            <section id="page-dashboard" class="page active">
+
+                <div class="page-head">
+                    <div>
+                        <h1>Visão geral</h1>
+                        <p>Monitoramento operacional do almoxarifado</p>
+                    </div>
+
+                    <div class="actions">
+                        <button class="btn" onclick="exportData()">⇩ Backup</button>
+                        <button class="btn btn-primary" onclick="showPage('movement')">+ Movimentação</button>
+                    </div>
+                </div>
+
+
+                <div class="cards">
+
+                    <div class="card">
+                        <div class="card-label">Itens cadastrados</div>
+                        <div class="card-value" id="cardItems">0</div>
+                        <div class="card-sub">Materiais ativos</div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-label">Valor do estoque</div>
+                        <div class="card-value" id="cardValue">R$ 0,00</div>
+                        <div class="card-sub">Valor estimado atual</div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-label">Entradas</div>
+                        <div class="card-value" id="cardIn">0</div>
+                        <div class="card-sub">Movimentações registradas</div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-label">Saídas</div>
+                        <div class="card-value" id="cardOut">0</div>
+                        <div class="card-sub">Movimentações registradas</div>
+                    </div>
+
+                </div>
+
+
+                <div class="dashboard-grid">
+
+                    <div class="panel">
+
+                        <div class="panel-head">
+                            <h3>Movimentações recentes</h3>
+                            <span class="badge badge-blue">LIVE</span>
+                        </div>
+
+                        <div class="table-wrap">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Data</th>
+                                        <th>Material</th>
+                                        <th>Tipo</th>
+                                        <th>Qtd.</th>
+                                        <th>Usuário</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="recentMovements"></tbody>
+                            </table>
+                        </div>
+
+                    </div>
+
+
+                    <div class="panel">
+
+                        <div class="panel-head">
+                            <h3>Indicadores</h3>
+                        </div>
+
+                        <div class="panel-body">
+
+                            <div class="card" style="margin-bottom:12px">
+                                <div class="card-label">Estoque baixo</div>
+                                <div class="card-value" id="lowStock">0</div>
+                                <div class="card-sub">Abaixo do estoque mínimo</div>
+                            </div>
+
+                            <div class="card">
+                                <div class="card-label">Usuários ativos</div>
+                                <div class="card-value" id="activeUsers">0</div>
+                                <div class="card-sub">Com acesso ao sistema</div>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- MATERIALS -->
+
+            <section id="page-materials" class="page">
+
+                <div class="page-head">
+
+                    <div>
+                        <h1>Materiais</h1>
+                        <p>Cadastro e controle do catálogo de materiais</p>
+                    </div>
+
+                    <button class="btn btn-primary" onclick="openMaterialModal()">
+                        + Novo material
+                    </button>
+
+                </div>
+
+
+                <div class="panel">
+
+                    <div class="panel-body">
+
+                        <div class="toolbar">
+                            <input id="materialSearch"
+                                   placeholder="Pesquisar por código, nome ou NCM..."
+                                   oninput="renderMaterials()">
+                        </div>
+
+                    </div>
+
+                    <div class="table-wrap">
+
+                        <table>
+
+                            <thead>
+                                <tr>
+                                    <th>Código</th>
+                                    <th>Material</th>
+                                    <th>NCM</th>
+                                    <th>Unidade</th>
+                                    <th>Estoque</th>
+                                    <th>Mínimo</th>
+                                    <th>Valor unit.</th>
+                                    <th>Status</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+
+                            <tbody id="materialsTable"></tbody>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- MOVEMENT -->
+
+            <section id="page-movement" class="page">
+
+                <div class="page-head">
+                    <div>
+                        <h1>Entrada / Saída</h1>
+                        <p>Registre as movimentações do estoque</p>
+                    </div>
+                </div>
+
+
+                <div class="panel form-panel">
+
+                    <div class="section-title">Nova movimentação</div>
+
+                    <div class="form-grid">
+
+                        <div class="field col-4">
+                            <label>Tipo de operação</label>
+                            <select id="movementType">
+                                <option value="ENTRADA">Entrada de material</option>
+                                <option value="SAIDA">Saída de material</option>
+                            </select>
+                        </div>
+
+                        <div class="field col-8">
+                            <label>Material</label>
+                            <select id="movementMaterial"></select>
+                        </div>
+
+                        <div class="field col-4">
+                            <label>Quantidade</label>
+                            <input id="movementQty" type="number" min="0.01" step="0.01">
+                        </div>
+
+                        <div class="field col-4">
+                            <label>Documento / NF / Requisição</label>
+                            <input id="movementDoc" placeholder="Ex.: NF 000123">
+                        </div>
+
+                        <div class="field col-4">
+                            <label>Valor unitário</label>
+                            <input id="movementValue" type="number" min="0" step="0.01">
+                        </div>
+
+                        <div class="field col-12">
+                            <label>Observação / Motivo</label>
+                            <textarea id="movementNote"
+                                      placeholder="Descreva o motivo ou informações adicionais..."></textarea>
+                        </div>
+
+                        <div class="col-12 actions">
+                            <button class="btn btn-primary" onclick="registerMovement()">
+                                CONFIRMAR MOVIMENTAÇÃO
+                            </button>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- HISTORY -->
+
+            <section id="page-history" class="page">
+
+                <div class="page-head">
+
+                    <div>
+                        <h1>Histórico</h1>
+                        <p>Auditoria completa de entradas e saídas</p>
+                    </div>
+
+                    <button class="btn" onclick="exportHistory()">
+                        ⇩ Exportar CSV
+                    </button>
+
+                </div>
+
+
+                <div class="panel">
+
+                    <div class="panel-body">
+
+                        <div class="toolbar">
+                            <input id="historySearch"
+                                   placeholder="Pesquisar histórico..."
+                                   oninput="renderHistory()">
+
+                            <select id="historyFilter" onchange="renderHistory()" style="max-width:200px">
+                                <option value="">Todos</option>
+                                <option value="ENTRADA">Entradas</option>
+                                <option value="SAIDA">Saídas</option>
+                            </select>
+                        </div>
+
+                    </div>
+
+
+                    <div class="table-wrap">
+
+                        <table>
+
+                            <thead>
+                                <tr>
+                                    <th>Data / Hora</th>
+                                    <th>Material</th>
+                                    <th>NCM</th>
+                                    <th>Tipo</th>
+                                    <th>Quantidade</th>
+                                    <th>Saldo anterior</th>
+                                    <th>Saldo final</th>
+                                    <th>Usuário</th>
+                                    <th>Documento</th>
+                                </tr>
+                            </thead>
+
+                            <tbody id="historyTable"></tbody>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- USERS -->
+
+            <section id="page-users" class="page">
+
+                <div class="page-head">
+
+                    <div>
+                        <h1>Usuários</h1>
+                        <p>Controle de acesso e permissões</p>
+                    </div>
+
+                    <button class="btn btn-primary" onclick="openUserModal()">
+                        + Novo usuário
+                    </button>
+
+                </div>
+
+
+                <div class="panel">
+
+                    <div class="table-wrap">
+
+                        <table>
+
+                            <thead>
+                                <tr>
+                                    <th>Usuário</th>
+                                    <th>Nome</th>
+                                    <th>Perfil</th>
+                                    <th>Status</th>
+                                    <th>Criado em</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+
+                            <tbody id="usersTable"></tbody>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- SETTINGS -->
+
+            <section id="page-settings" class="page">
+
+                <div class="page-head">
+
+                    <div>
+                        <h1>Configurações</h1>
+                        <p>Parâmetros do sistema</p>
+                    </div>
+
+                </div>
+
+                <div class="panel form-panel">
+
+                    <div class="section-title">Base NCM</div>
+
+                    <p style="color:var(--muted);font-size:13px;line-height:1.7">
+                        O sistema pode consultar a tabela NCM vigente disponibilizada
+                        pela Receita Federal/Sistema Classif.
+                    </p>
+
+                    <button class="btn btn-primary" onclick="loadNCMDatabase(true)">
+                        ATUALIZAR BASE NCM
+                    </button>
+
+                    <div id="ncmInfo"
+                         style="margin-top:15px;color:var(--muted);font-size:12px">
+                    </div>
+
+                    <hr style="border:0;border-top:1px solid var(--border);margin:25px 0">
+
+                    <div class="section-title">Dados locais</div>
+
+                    <div class="actions">
+
+                        <button class="btn" onclick="exportData()">
+                            Exportar backup JSON
+                        </button>
+
+                        <button class="btn btn-danger" onclick="clearAllData()">
+                            Limpar dados locais
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+        </div>
+
+    </main>
+
+</section>
+
+
+<!-- MATERIAL MODAL -->
+
+<div id="materialModal" class="modal">
+
+    <div class="modal-box">
+
+        <div class="modal-head">
+            <h3>Novo material</h3>
+            <button class="btn" onclick="closeModal('materialModal')">×</button>
+        </div>
+
+        <div class="modal-body">
+
+            <div class="form-grid">
+
+                <div class="field col-4">
+                    <label>Código interno *</label>
+                    <input id="mCode" placeholder="MAT-0001">
+                </div>
+
+                <div class="field col-8">
+                    <label>Nome do material *</label>
+                    <input id="mName" placeholder="Nome do item">
+                </div>
+
+                <div class="field col-12">
+                    <label>Descrição completa *</label>
+                    <textarea id="mDescription"
+                              placeholder="Informe a descrição detalhada do material"></textarea>
+                </div>
+
+                <div class="field col-6">
+                    <label>NCM * — 8 dígitos</label>
+                    <input id="mNcm"
+                           maxlength="8"
+                           inputmode="numeric"
+                           placeholder="00000000"
+                           oninput="validateNCMInput()">
+                    <div id="ncmStatus" class="ncm-status"></div>
+                </div>
+
+                <div class="field col-6">
+                    <label>Unidade *</label>
+                    <select id="mUnit">
+                        <option value="UN">UN — Unidade</option>
+                        <option value="KG">KG — Quilograma</option>
+                        <option value="G">G — Grama</option>
+                        <option value="L">L — Litro</option>
+                        <option value="M">M — Metro</option>
+                        <option value="M2">M² — Metro quadrado</option>
+                        <option value="M3">M³ — Metro cúbico</option>
+                        <option value="CX">CX — Caixa</option>
+                        <option value="PC">PC — Peça</option>
+                        <option value="PAR">PAR — Par</option>
+                    </select>
+                </div>
+
+                <div class="field col-4">
+                    <label>Quantidade inicial</label>
+                    <input id="mQty" type="number" min="0" step="0.01" value="0">
+                </div>
+
+                <div class="field col-4">
+                    <label>Estoque mínimo</label>
+                    <input id="mMin" type="number" min="0" step="0.01" value="0">
+                </div>
+
+                <div class="field col-4">
+                    <label>Valor unitário *</label>
+                    <input id="mValue" type="number" min="0" step="0.01" value="0"
+                           oninput="updateMaterialTotal()">
+                </div>
+
+                <div class="col-12">
+                    <div class="total-preview">
+                        <span>Valor total inicial</span>
+                        <strong id="materialTotal">R$ 0,00</strong>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="modal-foot">
+            <button class="btn" onclick="closeModal('materialModal')">Cancelar</button>
+            <button class="btn btn-primary" onclick="saveMaterial()">CADASTRAR MATERIAL</button>
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- USER MODAL -->
+
+<div id="userModal" class="modal">
+
+    <div class="modal-box">
+
+        <div class="modal-head">
+            <h3>Novo usuário</h3>
+            <button class="btn" onclick="closeModal('userModal')">×</button>
+        </div>
+
+        <div class="modal-body">
+
+            <div class="field">
+                <label>Nome completo</label>
+                <input id="uName">
+            </div>
+
+            <div class="field">
+                <label>Usuário</label>
+                <input id="uUser">
+            </div>
+
+            <div class="field">
+                <label>Senha</label>
+                <input id="uPass" type="password">
+            </div>
+
+            <div class="field">
+                <label>Perfil</label>
+                <select id="uRole">
+                    <option value="USER">Usuário autorizado</option>
+                    <option value="ADMIN">Administrador</option>
+                </select>
+            </div>
+
+        </div>
+
+        <div class="modal-foot">
+            <button class="btn" onclick="closeModal('userModal')">Cancelar</button>
+            <button class="btn btn-primary" onclick="saveUser()">CRIAR USUÁRIO</button>
+        </div>
+
+    </div>
+
+</div>
+
+
+<div id="toast"></div>
+
+
+<script src="javascript.js"></script>
+
+</body>
+</html>
