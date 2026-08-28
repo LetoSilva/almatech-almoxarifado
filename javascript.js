@@ -31,9 +31,38 @@ let currentUser = null;
 
 function loadData(){
 
-    users =
-        JSON.parse(localStorage.getItem(DB_KEYS.users) || "null")
-        || [
+    /* =====================================================
+       USUÁRIOS
+    ===================================================== */
+
+    const savedUsers =
+        localStorage.getItem(DB_KEYS.users);
+
+    if(savedUsers){
+
+        try{
+
+            users = JSON.parse(savedUsers);
+
+        }catch(error){
+
+            console.error(
+                "Erro ao carregar usuários:",
+                error
+            );
+
+            users = [];
+
+        }
+
+    }else{
+
+        /*
+            Cria os usuários padrão somente na primeira execução.
+        */
+
+        users = [
+
             {
                 id:crypto.randomUUID(),
                 name:"Administrador",
@@ -43,6 +72,7 @@ function loadData(){
                 active:true,
                 createdAt:new Date().toISOString()
             },
+
             {
                 id:crypto.randomUUID(),
                 name:"Almoxarife",
@@ -52,19 +82,102 @@ function loadData(){
                 active:true,
                 createdAt:new Date().toISOString()
             }
+
         ];
 
-    materials =
-        JSON.parse(localStorage.getItem(DB_KEYS.materials) || "[]");
+        /*
+            Salva imediatamente.
 
-    movements =
-        JSON.parse(localStorage.getItem(DB_KEYS.movements) || "[]");
+            Isso é importante porque os IDs gerados
+            precisam permanecer os mesmos depois de um F5.
+        */
 
-    ncmDatabase =
-        JSON.parse(localStorage.getItem(DB_KEYS.ncm) || "{}");
+        localStorage.setItem(
+            DB_KEYS.users,
+            JSON.stringify(users)
+        );
 
-    currentUser =
-        JSON.parse(localStorage.getItem(DB_KEYS.current) || "null");
+    }
+
+
+    /* =====================================================
+       MATERIAIS
+    ===================================================== */
+
+    try{
+
+        materials =
+            JSON.parse(
+                localStorage.getItem(DB_KEYS.materials) || "[]"
+            );
+
+    }catch(error){
+
+        console.error(
+            "Erro ao carregar materiais:",
+            error
+        );
+
+        materials = [];
+
+    }
+
+
+    /* =====================================================
+       MOVIMENTAÇÕES
+    ===================================================== */
+
+    try{
+
+        movements =
+            JSON.parse(
+                localStorage.getItem(DB_KEYS.movements) || "[]"
+            );
+
+    }catch(error){
+
+        console.error(
+            "Erro ao carregar movimentações:",
+            error
+        );
+
+        movements = [];
+
+    }
+
+
+    /* =====================================================
+       BASE NCM
+    ===================================================== */
+
+    try{
+
+        ncmDatabase =
+            JSON.parse(
+                localStorage.getItem(DB_KEYS.ncm) || "{}"
+            );
+
+    }catch(error){
+
+        console.error(
+            "Erro ao carregar base NCM:",
+            error
+        );
+
+        ncmDatabase = {};
+
+    }
+
+
+    /*
+        NÃO carregamos currentUser aqui.
+
+        A sessão será restaurada pela função
+        restoreSession().
+    */
+
+    currentUser = null;
+
 }
 
 
@@ -130,53 +243,245 @@ function toast(message,type="success"){
    LOGIN
 ========================================================= */
 
+/* =========================================================
+   LOGIN / SESSÃO
+========================================================= */
+
 function login(){
 
     const username =
-        document.getElementById("loginUser").value.trim();
+        document.getElementById("loginUser")
+        .value
+        .trim();
 
     const password =
-        document.getElementById("loginPass").value;
+        document.getElementById("loginPass")
+        .value;
 
-    const user =
-        users.find(
-            u =>
-                u.username === username &&
-                u.password === password &&
-                u.active
+
+    if(!username || !password){
+
+        toast(
+            "Informe usuário e senha.",
+            "error"
         );
-
-    if(!user){
-
-        toast("Usuário ou senha inválidos.","error");
 
         return;
 
     }
 
+
+    const user =
+        users.find(
+            u =>
+                u.username.toLowerCase() ===
+                username.toLowerCase() &&
+
+                u.password === password &&
+
+                u.active === true
+        );
+
+
+    if(!user){
+
+        toast(
+            "Usuário ou senha inválidos.",
+            "error"
+        );
+
+        return;
+
+    }
+
+
+    /*
+        Define o usuário atual.
+    */
+
     currentUser = user;
+
+
+    /*
+        IMPORTANTE:
+
+        Salvamos somente o ID do usuário.
+
+        Não salvamos mais o objeto inteiro.
+    */
 
     localStorage.setItem(
         DB_KEYS.current,
-        JSON.stringify(user)
+        user.id
     );
+
+
+    /*
+        Abre o sistema.
+    */
 
     startApplication();
 
 }
 
 
+/* =========================================================
+   RESTAURAR SESSÃO APÓS F5 / REFRESH
+========================================================= */
+
+function restoreSession(){
+
+    let savedUserId =
+        localStorage.getItem(DB_KEYS.current);
+
+
+    /*
+        Não existe sessão salva.
+    */
+
+    if(!savedUserId){
+
+        return false;
+
+    }
+
+
+    /*
+        COMPATIBILIDADE COM A VERSÃO ANTIGA
+
+        Se o navegador ainda tiver salvo o objeto inteiro
+        da versão anterior, convertemos automaticamente
+        para o ID.
+
+        Isso evita que o usuário precise limpar o navegador.
+    */
+
+    try{
+
+        const parsed =
+            JSON.parse(savedUserId);
+
+        if(
+            parsed &&
+            typeof parsed === "object" &&
+            parsed.id
+        ){
+
+            savedUserId = String(parsed.id);
+
+            localStorage.setItem(
+                DB_KEYS.current,
+                savedUserId
+            );
+
+        }
+
+    }catch(error){
+
+        /*
+            Não é JSON.
+            Isso significa que provavelmente já é
+            o ID salvo pela nova versão.
+        */
+
+    }
+
+
+    /*
+        Procura o usuário novamente nos dados carregados.
+    */
+
+    const user =
+        users.find(
+            u =>
+                String(u.id) === String(savedUserId) &&
+                u.active === true
+        );
+
+
+    /*
+        Se o usuário não existir mais ou estiver bloqueado,
+        remove a sessão.
+    */
+
+    if(!user){
+
+        console.warn(
+            "Sessão encontrada, mas o usuário não está mais disponível."
+        );
+
+        localStorage.removeItem(
+            DB_KEYS.current
+        );
+
+        currentUser = null;
+
+        return false;
+
+    }
+
+
+    /*
+        Usuário encontrado.
+
+        Restaura a sessão automaticamente.
+    */
+
+    currentUser = user;
+
+
+    startApplication();
+
+
+    return true;
+
+}
+
+
+/* =========================================================
+   LOGOUT
+========================================================= */
+
 function logout(){
+
+    /*
+        Encerra somente a sessão.
+        Os dados de materiais, usuários e movimentações
+        continuam salvos.
+    */
 
     currentUser = null;
 
-    localStorage.removeItem(DB_KEYS.current);
+    localStorage.removeItem(
+        DB_KEYS.current
+    );
+
+
+    /*
+        Esconde o sistema.
+    */
 
     document.getElementById("app")
         .classList.add("hidden");
 
+
+    /*
+        Mostra o login.
+    */
+
     document.getElementById("loginScreen")
         .classList.remove("hidden");
+
+
+    /*
+        Limpa os campos.
+    */
+
+    document.getElementById("loginUser")
+        .value = "";
+
+    document.getElementById("loginPass")
+        .value = "";
 
 }
 
@@ -1597,35 +1902,30 @@ function renderAll(){
    INICIALIZAÇÃO
 ========================================================= */
 
+/* =========================================================
+   INICIALIZAÇÃO DO SISTEMA
+========================================================= */
+
+/*
+    1. Carrega usuários, materiais, movimentações e NCM.
+*/
+
 loadData();
-
-if(currentUser){
-
-    const valid =
-        users.find(
-            u=>
-                u.id===currentUser.id &&
-                u.active
-        );
-
-    if(valid){
-
-        currentUser=valid;
-
-        startApplication();
-
-    }else{
-
-        localStorage.removeItem(DB_KEYS.current);
-
-    }
-
-}
 
 
 /*
-    Tenta carregar a base NCM somente quando ela ainda
-    não estiver disponível localmente.
+    2. Tenta restaurar automaticamente a sessão anterior.
+
+    Se o usuário estava logado antes de apertar F5,
+    ele será levado diretamente para o sistema.
+*/
+
+restoreSession();
+
+
+/*
+    3. Carrega a base NCM somente se ainda não existir
+       localmente.
 */
 
 if(!Object.keys(ncmDatabase).length){
@@ -1635,7 +1935,38 @@ if(!Object.keys(ncmDatabase).length){
 }
 
 
-/* Enter no login */
+/* =========================================================
+   ENTER NO LOGIN
+========================================================= */
+
+document.getElementById("loginPass")
+    .addEventListener(
+        "keydown",
+        event => {
+
+            if(event.key === "Enter"){
+
+                login();
+
+            }
+
+        }
+    );
+
+
+/*
+    Tenta carregar a base NCM somente quando ela ainda
+    não estiver disponível localmente.
+
+
+if(!Object.keys(ncmDatabase).length){
+
+    loadNCMDatabase(false);
+
+}
+
+
+/* Enter no login
 
 document.getElementById("loginPass")
     .addEventListener("keydown",event=>{
@@ -1647,3 +1978,4 @@ document.getElementById("loginPass")
         }
 
     });
+*/
