@@ -739,3 +739,91 @@ tr:hover td{
         grid-column:span 12;
     }
 }
+
+/* =========================================================
+   FOOTER DO SISTEMA
+========================================================= */
+
+.system-footer{
+    margin-top:30px;
+    padding:18px 26px;
+    border-top:1px solid var(--border);
+    background:rgba(6,15,26,.72);
+
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:20px;
+
+    color:var(--muted);
+    font-size:11px;
+}
+
+.footer-left{
+    display:flex;
+    align-items:center;
+    gap:9px;
+}
+
+.footer-left strong{
+    color:var(--text);
+    font-size:12px;
+    letter-spacing:1.2px;
+}
+
+.footer-left span{
+    color:#506a81;
+}
+
+.footer-center{
+    text-align:center;
+    color:#58748b;
+}
+
+.footer-right{
+    display:flex;
+    align-items:center;
+    gap:14px;
+}
+
+.footer-status{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    color:var(--green);
+}
+
+.footer-status-dot{
+    width:6px;
+    height:6px;
+    border-radius:50%;
+    background:var(--green);
+    box-shadow:0 0 10px var(--green);
+}
+
+/* FOOTER MOBILE */
+
+@media(max-width:700px){
+
+    .system-footer{
+        flex-direction:column;
+        text-align:center;
+        padding:18px 15px;
+        gap:10px;
+    }
+
+    .footer-left,
+    .footer-right{
+        justify-content:center;
+    }
+
+}
+
+footer a {
+    color: inherit; /* Mantém a mesma cor do texto do footer */
+    text-decoration: none; /* Remove o sublinhado padrão */
+}
+
+footer a:hover {
+    text-decoration: underline; /* Adiciona o sublinhado apenas quando passa o mouse */
+}
